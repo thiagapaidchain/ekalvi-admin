@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { School, Users, CheckCircle, Clock, Search, Printer, Download, BookOpen, Filter, ArrowUpRight, ShieldCheck, CheckSquare, Square } from 'lucide-react';
+import { School, Users, CheckCircle, Clock, Search, Printer, Download, BookOpen, Filter, ArrowUpRight, ShieldCheck, CheckSquare, Square, LogOut, User as UserIcon } from 'lucide-react';
+import { apiClient, User } from './api';
+import { AdminLogin } from './components/AdminLogin';
 
 interface StudentRosterItem {
   id: string;
@@ -109,6 +111,7 @@ const INITIAL_STUDENTS: StudentRosterItem[] = [
 ];
 
 export const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => apiClient.getUser());
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'STUDENTS' | 'DISTRIBUTION' | 'BOOKLISTS'>('DASHBOARD');
   const [students, setStudents] = useState<StudentRosterItem[]>(INITIAL_STUDENTS);
 
@@ -116,6 +119,12 @@ export const App: React.FC = () => {
   const [selectedStandard, setSelectedStandard] = useState<string>('ALL');
   const [selectedClass, setSelectedClass] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleLogout = () => {
+    apiClient.clearToken();
+    apiClient.clearUser();
+    setCurrentUser(null);
+  };
 
   // Distribution check toggle
   const toggleHandedToStudent = (studentId: string) => {
@@ -146,6 +155,10 @@ export const App: React.FC = () => {
   // Unique classes for filter
   const classList = Array.from(new Set(students.map((s) => s.className)));
 
+  if (!currentUser) {
+    return <AdminLogin onLoginSuccess={(u) => setCurrentUser(u)} />;
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
@@ -165,10 +178,40 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-              Sesi Persekolahan 2026/2027
+              Sesi 2026/2027
             </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.25)', padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(212,175,55,0.3)' }}>
+              <UserIcon size={14} color="#fef08a" />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#f8fafc' }}>
+                {currentUser.name}
+              </span>
+              <span style={{ fontSize: 10, background: '#d4af37', color: '#4d101e', padding: '1px 6px', borderRadius: 4, fontWeight: 800 }}>
+                ADMIN
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Sign out of Admin Portal"
+              style={{
+                background: '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '6px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+              }}
+            >
+              <LogOut size={14} />
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
       </header>
